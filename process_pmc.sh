@@ -20,5 +20,11 @@ done
 # Don't need this anymore
 rmdir raw_data/csv_files
 
+# remove duplicate lines from the CSV
+awk '!seen[$0]++' raw_data/combined_filelists.csv > raw_data/papers.csv
+
+# clean up
+rm raw_data/combined_filelists.csv
+
 echo "All XML files are extracted into raw_data/xml_documents"
-echo "Combined CSV file is created at raw_data/combined_filelists.csv"
+echo "Combined CSV file is created at raw_data/papers.csv"
