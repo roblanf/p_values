@@ -9,6 +9,12 @@ for tar_file in downloads/*.tar.gz; do
     tar -xzf "$tar_file" -C raw_data/xml_documents
 done
 
+# Move all the .xml files into the one directory
+for dir in raw_data/xml_documents/*/; do
+    find "$dir" -type f -name "*.xml" -exec mv {} raw_data/xml_documents/ \;
+    rmdir "$dir" # Remove empty directory
+done
+
 # Combine all .csv files into one
 combined_csv="raw_data/combined_filelists.csv"
 head -n 1 $(ls downloads/*.csv | head -n 1) > "$combined_csv" # add header
