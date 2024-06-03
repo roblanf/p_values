@@ -3,6 +3,17 @@ library(xml2)
 library(stringr)
 library(parallel)
 library(pbapply)
+library(optparse)
+
+# Define command line options
+option_list <- list(
+  make_option(c("-c", "--context"), type = "logical", default = TRUE,
+              help = "Record context [default %default]", metavar = "logical")
+)
+
+# Parse command line options
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
 
 input_file_path <- "test_set"
 output_dir <- "processed_data"
@@ -48,10 +59,12 @@ extract_section_pvalues <- function(doc, pmcid, section) {
       temp_results <- tibble(
         p_value = str_extract(p_val, "0?\\.\\d+"),
         operator = str_extract(p_val, "[<>]=?|="),
-        context = sentence,
         pmcid = pmcid,
         section = section
       )
+      if (opt$context) {
+        temp_results <- temp_results %>% mutate(context = sentence)
+      }
       results <- bind_rows(results, temp_results)
     }
   }
@@ -66,13 +79,16 @@ process_paper <- function(paper_path) {
   abstract_pvalues <- extract_section_pvalues(doc, pmcid, "abstract")
   body_pvalues <- extract_section_pvalues(doc, pmcid, "body")
   
-  # Extract number of authors
-  num_authors <- length(xml_find_all(doc, "//contrib[@contrib-type='author']"))
+  # Count number of authors
+  authors <- xml_find_all(doc, "//contrib[@contrib-type='author']")
+  num_authors <- length(authors)
   
-  results <- bind_rows(abstract_pvalues, body_pvalues)
-  results <- results %>% mutate(num_authors = num_authors)
+  combined_results <- bind_rows(abstract_pvalues, body_pvalues)
+  if (nrow(combined_results) > 0) {
+    combined_results <- combined_results %>% mutate(num_authors = num_authors)
+  }
   
-  return(results)
+  return(combined_results)
 }
 
 get_all_papers <- function(head_directory_path) {
@@ -97,7 +113,7 @@ process_and_save <- function(paper_path) {
 # Set up parallel processing
 num_cores <- detectCores() - 1
 cl <- makeCluster(num_cores)
-clusterExport(cl, c("process_and_save", "process_paper", "extract_section_pvalues", "get_pvalues", "clarify_title", "is_pvalue", "output_dir", "exclusion_phrases", "load_exclusion_phrases"))
+clusterExport(cl, c("process_and_save", "process_paper", "extract_section_pvalues", "get_pvalues", "clarify_title", "is_pvalue", "output_dir", "exclusion_phrases", "load_exclusion_phrases", "opt"))
 clusterEvalQ(cl, {
   library(tidyverse)
   library(xml2)
