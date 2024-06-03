@@ -20,7 +20,7 @@ bash scripts/process_pmc.sh
 3. Get the p_values
 
 ```R
-Rscript scripts/extract_p_values.R --context FALSE --input "raw_data/xml_documents" --output "processed_data" --exclusion "exclusion_file.txt"
+Rscript scripts/extract_p_values.R --context FALSE --input "raw_data/xml_documents" --output "processed_data" --exclusion "exclusion_phrases.txt"
 
 ```
 
