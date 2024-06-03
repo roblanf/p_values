@@ -1,0 +1,18 @@
+Statistical significance was defined as P < 0.05.
+Significance levels: * p¬†<¬†0.05, ** p¬†<¬†0.01, *** p¬†‚©Ω¬†0.001.
+A P < 0.05 was considered statistically significant for all analyses.
+Critical F-ratio significance for ANOVA was set at p<0.01 corresponding to q<0.003 or a false discovery rate of only 0.3%.
+Statistical significance, tested by the Student‚Äôs t-test is indicated (*P < 0.05, **P < 0.005, ***P < 0.0005).
+P < 0.05 was considered significant.
+Statistical testing was 2 sided with a threshold of statistical significance at p<0.5.
+P<0.05 was considered to indicate a statistically significant difference
+P values were considered significant at P¬†< 0.05.
+P values were considered significant at P¬†< 0.05 (*P¬†< 0.05 vs.
+P‚Ää<‚Ää0.05 was considered statistically significant.
+P‚Ää>‚Ää0.05 indicates that there is no obvious publication bias, while P‚Ää<‚Ää0.05 shows a certain publication bias.
+Threshold for significance was set at P < 0.05.
+The Cochrane risk of bias assessment tool was employed to assess the quality of the data obtained and the risk of bias in each study.36 All tests were two-sided and the threshold for significance was set at P < 0.05.
+Significance was set at unadjusted P‚Äâ<‚Äâ0.05, as no significant differences in gene expression remained after multiple testing correction (false discovery rate).
+A value of P < 0.05 was considered to be statistically significant.
+Significance levels: * p¬†<¬†0.05, ** p¬†<¬†0.01, *** p¬†‚©Ω¬†0.001.
+A P < 0.05 was considered statistically significant for all analyses.
