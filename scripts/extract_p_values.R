@@ -1,33 +1,27 @@
 library(tidyverse)
 library(xml2)
 library(stringr)
+library(parallel)
 
-# Define input and output paths
 input_file_path <- "test_set"
-output_file_path <- "processed_data/pvalues_extracted.csv"
+output_dir <- "processed_data"
+dir.create(output_dir, showWarnings = FALSE)
 
-dir.create("processed_data", showWarnings = FALSE)
-
-
-# Function to clean up titles extracted from XML tags
 clarify_title <- function(tag) {
   title <- xml_text(tag)
   title <- str_replace_all(title, "[\r\n]", " ")
   return(title)
 }
 
-# Function to check if a candidate string is a p-value
 is_pvalue <- function(candidate) {
   return(str_detect(candidate, "^0?\\.\\d+|<|>|="))
 }
 
-# Function to extract p-values from text
 get_pvalues <- function(text) {
   p_values <- str_extract_all(text, "\\b(p|P)\\s*([<>]=?|=)\\s*0?\\.\\d+\\b")[[1]]
   p_values <- str_replace_all(p_values, "\\s+", "")
   return(p_values)
 }
-
 
 extract_section_pvalues <- function(doc, pmcid, section) {
   section_text <- xml_text(xml_find_all(doc, paste0("//", section)))
@@ -51,7 +45,6 @@ extract_section_pvalues <- function(doc, pmcid, section) {
   return(results)
 }
 
-# Function to process an individual XML paper
 process_paper <- function(paper_path) {
   doc <- read_xml(paper_path)
   pmcid <- xml_text(xml_find_first(doc, "//article-id[@pub-id-type='pmc']"))
@@ -62,50 +55,50 @@ process_paper <- function(paper_path) {
   return(bind_rows(abstract_pvalues, body_pvalues))
 }
 
-# Function to get all paper paths from the directory
 get_all_papers <- function(head_directory_path) {
   return(list.files(head_directory_path, pattern = "\\.xml$", full.names = TRUE, recursive = TRUE))
 }
 
-
+# Set up parallel processing
+num_cores <- detectCores() - 1
+cl <- makeCluster(num_cores)
+clusterExport(cl, c("process_paper", "extract_section_pvalues", "get_pvalues", "clarify_title", "is_pvalue", "output_dir"))
+clusterEvalQ(cl, {
+  library(tidyverse)
+  library(xml2)
+  library(stringr)
+})
 
 # Get the list of all XML files to be processed
 paper_paths <- get_all_papers(input_file_path)
 
-# Initialize an empty tibble for results
-all_results <- tibble(
-  p_value = character(),
-  operator = character(),
-  context = character(),
-  pmcid = character(),
-  section = character()
-)
-
-# Process each paper and append results to all_results
-for (i in seq_along(paper_paths)) {
-  
-  paper_path = paper_paths[i]
-  
-  doc <- read_xml(paper_path)
-  pmcid <- xml_text(xml_find_first(doc, "//article-id[@pub-id-type='pmc']"))
-  
-  cat(pmcid, ": ")
-  
-  paper_results <- process_paper(paper_path)
-
-  n = nrow(paper_results)
-  
-  cat("got ", n, " p values\n")
-  
-  all_results <- bind_rows(all_results, paper_results)
-  
-  # Print progress every 10 papers
-  if (i %% 10 == 0) {
-    cat("Processed", i, "papers\n")
-  }
+# Create a function to process papers and write output to individual files
+process_and_save <- function(paper_path) {
+  tryCatch({
+    paper_results <- process_paper(paper_path)
+    pmcid <- str_extract(basename(paper_path), "PMC\\d+")
+    output_file <- file.path(output_dir, paste0(pmcid, "_pvalues.csv"))
+    write_csv(paper_results, output_file)
+    return(NULL)
+  }, error = function(e) {
+    return(list(paper_path = paper_path, error = e$message))
+  })
 }
 
-# Write the results to a CSV file
-write_csv(all_results, output_file_path)
+# Process papers in parallel and collect any errors
+errors <- parLapply(cl, paper_paths, process_and_save)
 
-print("P-values extraction completed and saved to raw_data/pvalues_extracted.csv")
+# Stop the cluster
+stopCluster(cl)
+
+# Filter out any NULL entries in errors
+errors <- errors[!sapply(errors, is.null)]
+
+# Convert the errors list to a data frame with appropriate column names
+if (length(errors) > 0) {
+  error_df <- do.call(rbind, lapply(errors, as.data.frame))
+  colnames(error_df) <- c("paper_path", "error_message")
+  write_csv(as_tibble(error_df), file.path(output_dir, "errors.csv"))
+}
+
+print("P-values extraction completed. Check 'processed_data' for individual results and 'errors.csv' for any errors.")
