@@ -2,6 +2,7 @@ library(tidyverse)
 library(xml2)
 library(stringr)
 library(parallel)
+library(pbapply)
 
 input_file_path <- "test_set"
 output_dir <- "processed_data"
@@ -85,8 +86,8 @@ process_and_save <- function(paper_path) {
   })
 }
 
-# Process papers in parallel and collect any errors
-errors <- parLapply(cl, paper_paths, process_and_save)
+# Process papers in parallel with a progress bar and collect any errors
+errors <- pblapply(paper_paths, function(paper_path) process_and_save(paper_path), cl = cl)
 
 # Stop the cluster
 stopCluster(cl)
