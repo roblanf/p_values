@@ -38,6 +38,11 @@ extract_section_pvalues <- function(doc, pmcid, section) {
   results <- tibble()
   
   for (sentence in sentences) {
+    # Exclude sentences with stars directly before the p value
+    if (str_detect(sentence, "\\*\\s*[pP]\\s*[<>]=?\\s*0?\\.\\d+")) {
+      next
+    }
+    
     p_values <- get_pvalues(sentence)
     for (p_val in p_values) {
       temp_results <- tibble(
