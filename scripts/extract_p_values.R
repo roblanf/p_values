@@ -60,19 +60,6 @@ get_all_papers <- function(head_directory_path) {
   return(list.files(head_directory_path, pattern = "\\.xml$", full.names = TRUE, recursive = TRUE))
 }
 
-# Set up parallel processing
-num_cores <- detectCores() - 1
-cl <- makeCluster(num_cores)
-clusterExport(cl, c("process_paper", "extract_section_pvalues", "get_pvalues", "clarify_title", "is_pvalue", "output_dir"))
-clusterEvalQ(cl, {
-  library(tidyverse)
-  library(xml2)
-  library(stringr)
-})
-
-# Get the list of all XML files to be processed
-paper_paths <- get_all_papers(input_file_path)
-
 # Create a function to process papers and write output to individual files
 process_and_save <- function(paper_path) {
   tryCatch({
@@ -87,6 +74,19 @@ process_and_save <- function(paper_path) {
     return(list(paper_path = paper_path, error = e$message))
   })
 }
+
+# Set up parallel processing
+num_cores <- detectCores() - 1
+cl <- makeCluster(num_cores)
+clusterExport(cl, c("process_and_save", "process_paper", "extract_section_pvalues", "get_pvalues", "clarify_title", "is_pvalue", "output_dir"))
+clusterEvalQ(cl, {
+  library(tidyverse)
+  library(xml2)
+  library(stringr)
+})
+
+# Get the list of all XML files to be processed
+paper_paths <- get_all_papers(input_file_path)
 
 # Process papers in parallel with a progress bar and collect any errors
 errors <- pblapply(paper_paths, function(paper_path) process_and_save(paper_path), cl = cl)
