@@ -6,6 +6,8 @@ library(pbapply)
 
 input_file_path <- "test_set"
 output_dir <- "processed_data"
+exclusion_file <- "exclusion_phrases.txt"
+
 dir.create(output_dir, showWarnings = FALSE)
 
 clarify_title <- function(tag) {
@@ -23,6 +25,12 @@ get_pvalues <- function(text) {
   p_values <- str_replace_all(p_values, "\\s+", "")
   return(p_values)
 }
+
+load_exclusion_phrases <- function(file) {
+  return(tolower(read_lines(file)))
+}
+
+exclusion_phrases <- load_exclusion_phrases(exclusion_file)
 
 extract_section_pvalues <- function(doc, pmcid, section) {
   section_text <- xml_text(xml_find_all(doc, paste0("//", section)))
@@ -78,7 +86,7 @@ process_and_save <- function(paper_path) {
 # Set up parallel processing
 num_cores <- detectCores() - 1
 cl <- makeCluster(num_cores)
-clusterExport(cl, c("process_and_save", "process_paper", "extract_section_pvalues", "get_pvalues", "clarify_title", "is_pvalue", "output_dir"))
+clusterExport(cl, c("process_and_save", "process_paper", "extract_section_pvalues", "get_pvalues", "clarify_title", "is_pvalue", "output_dir", "exclusion_phrases", "load_exclusion_phrases"))
 clusterEvalQ(cl, {
   library(tidyverse)
   library(xml2)
