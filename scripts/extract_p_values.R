@@ -5,19 +5,24 @@ library(parallel)
 library(pbapply)
 library(optparse)
 
-# Define command line options
 option_list <- list(
-  make_option(c("-c", "--context"), type = "logical", default = TRUE,
-              help = "Record context [default %default]", metavar = "logical")
+  make_option(c("-c", "--context"), type = "logical", default = FALSE,
+              help = "Record context [default %default]", metavar = "logical"),
+  make_option(c("-i", "--input"), type = "character", default = "test_set",
+              help = "Input file path [default %default]", metavar = "character"),
+  make_option(c("-o", "--output"), type = "character", default = "processed_data",
+              help = "Output directory [default %default]", metavar = "character"),
+  make_option(c("-e", "--exclusion"), type = "character", default = "exclusion_phrases.txt",
+              help = "Exclusion phrases file [default %default]", metavar = "character")
 )
 
 # Parse command line options
 opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
-input_file_path <- "test_set"
-output_dir <- "processed_data"
-exclusion_file <- "exclusion_phrases.txt"
+input_file_path <- opt$input
+output_dir <- opt$output
+exclusion_file <- opt$exclusion
 
 dir.create(output_dir, showWarnings = FALSE)
 
