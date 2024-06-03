@@ -77,9 +77,11 @@ paper_paths <- get_all_papers(input_file_path)
 process_and_save <- function(paper_path) {
   tryCatch({
     paper_results <- process_paper(paper_path)
-    pmcid <- str_extract(basename(paper_path), "PMC\\d+")
-    output_file <- file.path(output_dir, paste0(pmcid, "_pvalues.csv"))
-    write_csv(paper_results, output_file)
+    if (nrow(paper_results) > 0) {
+      pmcid <- str_extract(basename(paper_path), "PMC\\d+")
+      output_file <- file.path(output_dir, paste0(pmcid, "_pvalues.csv"))
+      write_csv(paper_results, output_file)
+    }
     return(NULL)
   }, error = function(e) {
     return(list(paper_path = paper_path, error = e$message))
