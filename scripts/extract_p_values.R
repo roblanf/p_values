@@ -66,7 +66,13 @@ process_paper <- function(paper_path) {
   abstract_pvalues <- extract_section_pvalues(doc, pmcid, "abstract")
   body_pvalues <- extract_section_pvalues(doc, pmcid, "body")
   
-  return(bind_rows(abstract_pvalues, body_pvalues))
+  # Extract number of authors
+  num_authors <- length(xml_find_all(doc, "//contrib[@contrib-type='author']"))
+  
+  results <- bind_rows(abstract_pvalues, body_pvalues)
+  results <- results %>% mutate(num_authors = num_authors)
+  
+  return(results)
 }
 
 get_all_papers <- function(head_directory_path) {
